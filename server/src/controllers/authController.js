@@ -117,4 +117,90 @@ const registerAdmin = async (req, res, next) => {
   }
 };
 
-module.exports = { registerUser, loginUser, registerAdmin };
+// Create an invite token for admin onboarding (admin-only)
+const crypto = require('crypto');
+const Invite = require('../models/Invite');
+
+const createInvite = async (req, res, next) => {
+  try {
+    // Only admins should be able to create invites — route will be protected with authorizeRoles
+    const { email } = req.body;
+    if (!email) {
+      const err = new Error('Please provide email to invite');
+      err.statusCode = 400;
+      return next(err);
+    }
+
+    const token = crypto.randomBytes(24).toString('hex');
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    const invite = await Invite.create({ email, token, createdBy: req.user._id, expiresAt });
+
+    // For now return the token in response so it can be used for manual testing.
+    res.status(201).json({ inviteId: invite._id, token: invite.token, expiresAt: invite.expiresAt });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+// Register using invite token (creates admin)
+const registerWithInvite = async (req, res, next) => {
+  try {
+    const { token, name, email, password } = req.body;
+    if (!token || !name || !email || !password) {
+      const err = new Error('Please provide token, name, email and password');
+      err.statusCode = 400;
+      return next(err);
+    }
+
+    const invite = await Invite.findOne({ token });
+    if (!invite) {
+      const err = new Error('Invalid invite token');
+      err.statusCode = 400;
+      return next(err);
+    }
+
+    if (invite.used) {
+      const err = new Error('Invite already used');
+      err.statusCode = 400;
+      return next(err);
+    }
+
+    if (invite.expiresAt < new Date()) {
+      const err = new Error('Invite expired');
+      err.statusCode = 400;
+      return next(err);
+    }
+
+    if (invite.email !== email) {
+      const err = new Error('Invite email does not match');
+      err.statusCode = 400;
+      return next(err);
+    }
+
+    const existing = await User.findOne({ email });
+    if (existing) {
+      const err = new Error('User already exists');
+      err.statusCode = 400;
+      return next(err);
+    }
+
+    const user = await User.create({ name, email, password, role: 'admin' });
+
+    invite.used = true;
+    invite.usedBy = user._id;
+    await invite.save();
+
+    res.status(201).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      token: generateToken(user._id),
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+module.exports = { registerUser, loginUser, registerAdmin, createInvite, registerWithInvite };
