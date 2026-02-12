@@ -1,0 +1,78 @@
+### 1️⃣ Register User (Regular User)
+POST http://localhost:5000/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "John Citizen",
+  "email": "john@example.com",
+  "password": "securepass123"
+}
+
+###
+
+### 2️⃣ Register Admin User
+POST http://localhost:5000/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "Admin Officer",
+  "email": "admin@example.com",
+  "password": "adminpass123"
+}
+
+###
+
+### 3️⃣ Login Regular User
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "john@example.com",
+  "password": "securepass123"
+}
+
+###
+
+### 4️⃣ Login Admin User
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "password": "adminpass123"
+}
+
+###
+
+### 5️⃣ Get User Profile WITHOUT Token (Should return 401)
+GET http://localhost:5000/api/user/profile
+Content-Type: application/json
+
+###
+
+### 6️⃣ Get User Profile WITH Valid Token (Replace TOKEN with actual token from step 3)
+GET http://localhost:5000/api/user/profile
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3YTc1ZjNmZjAwMDAwMDAwMDAwMDAwMCIsImlhdCI6MTczODM4MjYyNywiZXhwIjoxNzM5MTkyNDI3fQ.XXXXX
+
+###
+
+### 7️⃣ Access Admin Dashboard WITHOUT Token (Should return 401)
+GET http://localhost:5000/api/admin/dashboard
+Content-Type: application/json
+
+###
+
+### 8️⃣ Access Admin Dashboard WITH User Token (Should return 403 - Forbidden)
+GET http://localhost:5000/api/admin/dashboard
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3YTc1ZjNmZjAwMDAwMDAwMDAwMDAwMCIsImlhdCI6MTczODM4MjYyNywiZXhwIjoxNzM5MTkyNDI3fQ.XXXXX
+
+###
+
+### 9️⃣ Access Admin Dashboard WITH Admin Token (Should return 200 - Success)
+GET http://localhost:5000/api/admin/dashboard
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3YTc1ZjNmZjAwMDAwMDAwMDAwMDAwMSIsImlhdCI6MTczODM4MjYyNywiZXhwIjoxNzM5MTkyNDI3fQ.XXXXX
+
+###
